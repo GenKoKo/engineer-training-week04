@@ -10,28 +10,38 @@ app = Flask(__name__,
 app.secret_key = '_5#y2L"F4Q8z\n\xec]/'
 
 @app.route("/")
-def homepage():
-    return redirect(url_for("signin"))
+def index():
+    return render_template("/index.html")
 
 
-@app.route("/signin")
-def signin():
-    return render_template("/signin.html")
-
-
-@app.route("/member", methods =["GET", "POST"])
+@app.route("/member", methods = ["GET","POST"])
 def member():
+    if "ac" in session and request.method == "POST":
+        return render_template("/member.html")
+    elif "ac" in session and request.method == "GET":
+        print("direct member page test success")
+        print(session)
+        return render_template("/member.html")
+    
+    elif not "ac" in session and request.method == "GET":
+        print("status: no login")
+        print(session)
+        return redirect(url_for("index"))
 
-    if request.method == "POST" and request.form["a"] == "test" and request.form["p"] == "test":
+
+@app.route("/signin", methods =["POST"])
+def signin():
+
+    if request.form["a"] == "test" and request.form["p"] == "test":
         session["ac"] = request.form["a"]
         session["pa"] = request.form["p"]
-        print(session)
         print("status: log in")
-        return render_template("/member.html")
-
-    elif request.method == "POST" and request.form["a"] != "test" and request.form["p"] != "test":
         print(session)
+        return redirect(url_for("member"))
+
+    elif request.form["a"] != "test" or request.form["p"] != "test":
         print("status: login fail")
+        print(session)
         return redirect(url_for("error"))
 
     # 這會造成 未登錄狀況，直接landing member page → 產生bad request 原因未明 
@@ -39,15 +49,6 @@ def member():
     #     print("member test success")
     #     return render_template("/member.html")
 
-    elif "ac" in session and request.method == "GET":
-        print(session)
-        print("direct member page test success")
-        return render_template("/member.html")
-    
-    elif not "ac" in session and request.method == "GET":
-        print(session)
-        print("status: no login")
-        return redirect(url_for("signin"))
 
     else:
         print(session)
@@ -63,11 +64,9 @@ def error():
 def signout():
     session.pop("ac",None)
     session.pop("pa", None)
-    print(session)
     print("status: log out")
-    return redirect(url_for("signin"))
-
-
+    print(session)
+    return redirect(url_for("index"))
 
 
 app.run(port=3000)
